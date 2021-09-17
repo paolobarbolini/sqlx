@@ -3,6 +3,8 @@ use std::convert::TryFrom;
 
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::Buf;
+use time::format_description::FormatItem;
+use time::macros::format_description;
 use time::{Date, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
 
 use crate::decode::Decode;
@@ -12,6 +14,11 @@ use crate::mysql::protocol::text::ColumnType;
 use crate::mysql::type_info::MySqlTypeInfo;
 use crate::mysql::{MySql, MySqlValueFormat, MySqlValueRef};
 use crate::types::Type;
+
+const DATETIME: &[FormatItem<'static>] =
+    format_description!("[year]-[month]-[day] [hour]:[minute]:[second].[subsecond]");
+const DATE: &[FormatItem<'static>] = format_description!("[year]-[month]-[day]");
+const TIME: &[FormatItem<'static>] = format_description!("[hour]:[minute]:[second].[subsecond]");
 
 impl Type<MySql> for OffsetDateTime {
     fn type_info() -> MySqlTypeInfo {
@@ -114,7 +121,7 @@ impl<'r> Decode<'r, MySql> for Time {
                     Cow::Borrowed(s)
                 };
 
-                Time::parse(&*s, "%H:%M:%S.%N").map_err(Into::into)
+                Time::parse(&*s, &TIME).map_err(Into::into)
             }
         }
     }
@@ -148,7 +155,7 @@ impl<'r> Decode<'r, MySql> for Date {
             }
             MySqlValueFormat::Text => {
                 let s = value.as_str()?;
-                Date::parse(s, "%Y-%m-%d").map_err(Into::into)
+                Date::parse(s, &DATE).map_err(Into::into)
             }
         }
     }
@@ -225,7 +232,7 @@ impl<'r> Decode<'r, MySql> for PrimitiveDateTime {
                     Cow::Borrowed(s)
                 };
 
-                PrimitiveDateTime::parse(&*s, "%Y-%m-%d %H:%M:%S.%N").map_err(Into::into)
+                PrimitiveDateTime::parse(&*s, &DATETIME).map_err(Into::into)
             }
         }
     }

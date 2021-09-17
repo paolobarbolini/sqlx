@@ -7,6 +7,11 @@ use std::borrow::Cow;
 use std::mem;
 use time::{Duration, Time};
 
+use time::format_description::FormatItem;
+use time::macros::format_description;
+
+const FORMAT: &[FormatItem<'static>] = format_description!("[hour]:[minute]:[second].[subsecond]");
+
 impl Type<Postgres> for Time {
     fn type_info() -> PgTypeInfo {
         PgTypeInfo::TIME
@@ -60,7 +65,7 @@ impl<'r> Decode<'r, Postgres> for Time {
                     Cow::Borrowed(s)
                 };
 
-                Time::parse(&*s, "%H:%M:%S.%N")?
+                Time::parse(&*s, &FORMAT)?
             }
         })
     }
