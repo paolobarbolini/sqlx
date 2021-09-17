@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::Buf;
-use time::{Date, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
+use time::{Date, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
 
 use crate::decode::Decode;
 use crate::encode::{Encode, IsNull};
@@ -87,7 +87,7 @@ impl<'r> Decode<'r, MySql> for Time {
                 // are 0 then the length is 0 and no further data is send
                 // https://dev.mysql.com/doc/internals/en/binary-protocol-value.html
                 if len == 0 {
-                    return Ok(Time::try_from_hms_micro(0, 0, 0, 0).unwrap());
+                    return Ok(Time::MIDNIGHT);
                 }
 
                 // is negative : int<1>
@@ -237,7 +237,7 @@ fn encode_date(date: &Date, buf: &mut Vec<u8>) {
         .unwrap_or_else(|_| panic!("Date out of range for Mysql: {}", date));
 
     buf.extend_from_slice(&year.to_le_bytes());
-    buf.push(date.month());
+    buf.push(u8::from(date.month()));
     buf.push(date.day());
 }
 
@@ -247,13 +247,10 @@ fn decode_date(buf: &[u8]) -> Result<Option<Date>, BoxDynError> {
         return Ok(None);
     }
 
-    Date::try_from_ymd(
-        LittleEndian::read_u16(buf) as i32,
-        buf[2] as u8,
-        buf[3] as u8,
-    )
-    .map_err(Into::into)
-    .map(Some)
+    let month = Month::try_from(buf[2])?;
+    Date::from_calendar_date(LittleEndian::read_u16(buf) as i32, month, buf[3])
+        .map_err(Into::into)
+        .map(Some)
 }
 
 fn encode_time(time: &Time, include_micros: bool, buf: &mut Vec<u8>) {
@@ -278,6 +275,6 @@ fn decode_time(len: u8, mut buf: &[u8]) -> Result<Time, BoxDynError> {
         0
     };
 
-    Time::try_from_hms_micro(hour, minute, seconds, micros as u32)
+    Time::from_hms_micro(hour, minute, seconds, micros as u32)
         .map_err(|e| format!("Time out of range for MySQL: {}", e).into())
 }

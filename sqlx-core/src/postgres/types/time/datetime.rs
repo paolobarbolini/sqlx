@@ -6,7 +6,7 @@ use crate::postgres::{PgArgumentBuffer, PgTypeInfo, PgValueFormat, PgValueRef, P
 use crate::types::Type;
 use std::borrow::Cow;
 use std::mem;
-use time::{offset, Duration, OffsetDateTime, PrimitiveDateTime};
+use time::{macros::offset, Duration, OffsetDateTime, PrimitiveDateTime};
 
 impl Type<Postgres> for PrimitiveDateTime {
     fn type_info() -> PgTypeInfo {
