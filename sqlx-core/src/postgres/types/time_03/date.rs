@@ -1,12 +1,12 @@
 use crate::decode::Decode;
 use crate::encode::{Encode, IsNull};
 use crate::error::BoxDynError;
-use crate::postgres::types::time::PG_EPOCH;
+use crate::postgres::types::time_03::PG_EPOCH;
 use crate::postgres::{PgArgumentBuffer, PgTypeInfo, PgValueFormat, PgValueRef, Postgres};
 use crate::types::Type;
 use std::mem;
-use time::macros::format_description;
-use time::{Date, Duration};
+use time_03::macros::format_description;
+use time_03::{Date, Duration};
 
 impl Type<Postgres> for Date {
     fn type_info() -> PgTypeInfo {

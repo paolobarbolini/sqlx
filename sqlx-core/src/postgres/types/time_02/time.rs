@@ -5,7 +5,7 @@ use crate::postgres::{PgArgumentBuffer, PgTypeInfo, PgValueFormat, PgValueRef, P
 use crate::types::Type;
 use std::borrow::Cow;
 use std::mem;
-use time::{Duration, Time};
+use time_02::{Duration, Time};
 
 impl Type<Postgres> for Time {
     fn type_info() -> PgTypeInfo {

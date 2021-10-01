@@ -4,8 +4,8 @@ use crate::error::BoxDynError;
 use crate::postgres::{PgArgumentBuffer, PgTypeInfo, PgValueFormat, PgValueRef, Postgres};
 use crate::types::Type;
 use std::mem;
-use time::macros::format_description;
-use time::{Duration, Time};
+use time_03::macros::format_description;
+use time_03::{Duration, Time};
 
 impl Type<Postgres> for Time {
     fn type_info() -> PgTypeInfo {

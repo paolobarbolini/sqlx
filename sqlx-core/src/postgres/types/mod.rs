@@ -190,10 +190,10 @@ mod decimal;
 #[cfg(feature = "chrono")]
 mod chrono;
 
-#[cfg(feature = "time_02")]
+#[cfg(feature = "time-02")]
 mod time_02;
 
-#[cfg(feature = "time_03")]
+#[cfg(feature = "time-03")]
 mod time_03;
 
 #[cfg(feature = "uuid")]
