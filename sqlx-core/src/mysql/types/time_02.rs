@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::Buf;
-use time::{Date, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
+use time_02::{Date, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
 
 use crate::decode::Decode;
 use crate::encode::{Encode, IsNull};

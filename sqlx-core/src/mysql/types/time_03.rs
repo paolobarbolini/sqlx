@@ -2,8 +2,8 @@ use std::convert::TryFrom;
 
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::Buf;
-use time::macros::format_description;
-use time::{Date, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
+use time_03::macros::format_description;
+use time_03::{Date, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
 
 use crate::decode::Decode;
 use crate::encode::{Encode, IsNull};
