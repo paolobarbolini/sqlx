@@ -18,7 +18,7 @@ members = [
 
 [package]
 name = "sqlx"
-version = "0.5.7"
+version = "0.5.9"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/launchbadge/sqlx"
@@ -132,8 +132,8 @@ bstr = ["sqlx-core/bstr"]
 git2 = ["sqlx-core/git2"]
 
 [dependencies]
-sqlx-core = { version = "0.5.7", path = "sqlx-core", default-features = false }
-sqlx-macros = { version = "0.5.7", path = "sqlx-macros", default-features = false, optional = true }
+sqlx-core = { version = "0.5.9", path = "sqlx-core", default-features = false }
+sqlx-macros = { version = "0.5.9", path = "sqlx-macros", default-features = false, optional = true }
 
 [dev-dependencies]
 anyhow = "1.0.31"
@@ -150,6 +150,10 @@ paste = "1.0.1"
 serde = { version = "1.0.111", features = ["derive"] }
 serde_json = "1.0.53"
 url = "2.1.1"
+
+[patch.crates-io]
+# waiting for rustls 0.20.1
+rustls = { git = "https://github.com/rustls/rustls.git" }
 
 #
 # Any
