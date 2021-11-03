@@ -104,3 +104,7 @@ pub mod mssql;
 /// sqlx uses ahash for increased performance, at the cost of reduced DoS resistance.
 use ahash::AHashMap as HashMap;
 //type HashMap<K, V> = std::collections::HashMap<K, V, ahash::RandomState>;
+
+#[macro_use]
+#[cfg(feature = "time-03")]
+extern crate time_03 as time;

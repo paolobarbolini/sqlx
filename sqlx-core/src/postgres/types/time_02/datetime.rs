@@ -6,7 +6,7 @@ use crate::postgres::{PgArgumentBuffer, PgTypeInfo, PgValueFormat, PgValueRef, P
 use crate::types::Type;
 use std::borrow::Cow;
 use std::mem;
-use time_02::{offset, Duration, OffsetDateTime, PrimitiveDateTime};
+use time_02::{UtcOffset, Duration, OffsetDateTime, PrimitiveDateTime};
 
 impl Type<Postgres> for PrimitiveDateTime {
     fn type_info() -> PgTypeInfo {
@@ -102,7 +102,7 @@ impl<'r> Decode<'r, Postgres> for PrimitiveDateTime {
 
 impl Encode<'_, Postgres> for OffsetDateTime {
     fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> IsNull {
-        let utc = self.to_offset(offset!(UTC));
+        let utc = self.to_offset(UtcOffset::UTC);
         let primitive = PrimitiveDateTime::new(utc.date(), utc.time());
 
         Encode::<Postgres>::encode(&primitive, buf)
