@@ -105,6 +105,5 @@ pub mod mssql;
 use ahash::AHashMap as HashMap;
 //type HashMap<K, V> = std::collections::HashMap<K, V, ahash::RandomState>;
 
-#[macro_use]
 #[cfg(feature = "time-03")]
 extern crate time_03 as time;
