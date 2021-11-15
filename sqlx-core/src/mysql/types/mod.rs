@@ -30,9 +30,20 @@
 //! | `chrono::NaiveDate`                   | DATE                                                 |
 //! | `chrono::NaiveTime`                   | TIME                                                 |
 //!
-//! ### [`time`](https://crates.io/crates/time)
+//! ### [`time`](https://crates.io/crates/time) 0.2
 //!
-//! Requires the `time` Cargo feature flag.
+//! Requires the `time_02` Cargo feature flag.
+//!
+//! | Rust type                             | MySQL type(s)                                        |
+//! |---------------------------------------|------------------------------------------------------|
+//! | `time::PrimitiveDateTime`             | DATETIME                                             |
+//! | `time::OffsetDateTime`                | TIMESTAMP                                            |
+//! | `time::Date`                          | DATE                                                 |
+//! | `time::Time`                          | TIME                                                 |
+//!
+//! ### [`time`](https://crates.io/crates/time) 0.3
+//!
+//! Requires the `time_03` Cargo feature flag.
 //!
 //! | Rust type                             | MySQL type(s)                                        |
 //! |---------------------------------------|------------------------------------------------------|

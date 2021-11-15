@@ -45,9 +45,21 @@
 //! | `chrono::NaiveTime`                   | TIME                                                 |
 //! | [`PgTimeTz`]                          | TIMETZ                                               |
 //!
-//! ### [`time`](https://crates.io/crates/time)
+//! ### [`time`](https://crates.io/crates/time) 0.2
 //!
-//! Requires the `time` Cargo feature flag.
+//! Requires the `time_02` Cargo feature flag.
+//!
+//! | Rust type                             | Postgres type(s)                                     |
+//! |---------------------------------------|------------------------------------------------------|
+//! | `time::PrimitiveDateTime`             | TIMESTAMP                                            |
+//! | `time::OffsetDateTime`                | TIMESTAMPTZ                                          |
+//! | `time::Date`                          | DATE                                                 |
+//! | `time::Time`                          | TIME                                                 |
+//! | [`PgTimeTz`]                          | TIMETZ                                               |
+//!
+//! ### [`time`](https://crates.io/crates/time) 0.3
+//!
+//! Requires the `time_03` Cargo feature flag.
 //!
 //! | Rust type                             | Postgres type(s)                                     |
 //! |---------------------------------------|------------------------------------------------------|
