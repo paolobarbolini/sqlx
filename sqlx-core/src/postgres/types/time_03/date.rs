@@ -2,7 +2,9 @@ use crate::decode::Decode;
 use crate::encode::{Encode, IsNull};
 use crate::error::BoxDynError;
 use crate::postgres::types::time_03::PG_EPOCH;
-use crate::postgres::{PgArgumentBuffer, PgTypeInfo, PgValueFormat, PgValueRef, Postgres};
+use crate::postgres::{
+    PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueFormat, PgValueRef, Postgres,
+};
 use crate::types::Type;
 use std::mem;
 use time_03::macros::format_description;
@@ -14,15 +16,9 @@ impl Type<Postgres> for Date {
     }
 }
 
-impl Type<Postgres> for [Date] {
-    fn type_info() -> PgTypeInfo {
+impl PgHasArrayType for Date {
+    fn array_type_info() -> PgTypeInfo {
         PgTypeInfo::DATE_ARRAY
-    }
-}
-
-impl Type<Postgres> for Vec<Date> {
-    fn type_info() -> PgTypeInfo {
-        <[Date] as Type<Postgres>>::type_info()
     }
 }
 

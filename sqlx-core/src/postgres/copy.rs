@@ -75,10 +75,7 @@ impl Pool<Postgres> {
     /// ### Note
     /// [PgCopyIn::finish] or [PgCopyIn::abort] *must* be called when finished or the connection
     /// will return an error the next time it is used.
-    pub async fn copy_in_raw(
-        &mut self,
-        statement: &str,
-    ) -> Result<PgCopyIn<PoolConnection<Postgres>>> {
+    pub async fn copy_in_raw(&self, statement: &str) -> Result<PgCopyIn<PoolConnection<Postgres>>> {
         PgCopyIn::begin(self.acquire().await?, statement).await
     }
 
@@ -101,10 +98,7 @@ impl Pool<Postgres> {
     ///
     /// Command examples and accepted formats for `COPY` data are shown here:
     /// https://www.postgresql.org/docs/current/sql-copy.html
-    pub async fn copy_out_raw(
-        &mut self,
-        statement: &str,
-    ) -> Result<BoxStream<'static, Result<Bytes>>> {
+    pub async fn copy_out_raw(&self, statement: &str) -> Result<BoxStream<'static, Result<Bytes>>> {
         pg_begin_copy_out(self.acquire().await?, statement).await
     }
 }
@@ -138,9 +132,32 @@ impl<C: DerefMut<Target = PgConnection>> PgCopyIn<C> {
         })
     }
 
+    /// Returns `true` if Postgres is expecting data in text or CSV format.
+    pub fn is_textual(&self) -> bool {
+        self.response.format == 0
+    }
+
+    /// Returns the number of columns expected in the input.
+    pub fn num_columns(&self) -> usize {
+        assert_eq!(
+            self.response.num_columns as usize,
+            self.response.format_codes.len(),
+            "num_columns does not match format_codes.len()"
+        );
+        self.response.format_codes.len()
+    }
+
+    /// Check if a column is expecting data in text format (`true`) or binary format (`false`).
+    ///
+    /// ### Panics
+    /// If `column` is out of range according to [`.num_columns()`][Self::num_columns].
+    pub fn column_is_textual(&self, column: usize) -> bool {
+        self.response.format_codes[column] == 0
+    }
+
     /// Send a chunk of `COPY` data.
     ///
-    /// If you're copying data from an `AsyncRead`, maybe consider [Self::copy_from] instead.
+    /// If you're copying data from an `AsyncRead`, maybe consider [Self::read_from] instead.
     pub async fn send(&mut self, data: impl Deref<Target = [u8]>) -> Result<&mut Self> {
         self.conn
             .as_deref_mut()

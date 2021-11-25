@@ -61,6 +61,7 @@ pub struct SqliteConnectOptions {
     pub(crate) log_settings: LogSettings,
     pub(crate) immutable: bool,
     pub(crate) pragmas: IndexMap<Cow<'static, str>, Cow<'static, str>>,
+    pub(crate) serialized: bool,
 }
 
 impl Default for SqliteConnectOptions {
@@ -109,6 +110,7 @@ impl SqliteConnectOptions {
             log_settings: Default::default(),
             immutable: false,
             pragmas,
+            serialized: false,
         }
     }
 
@@ -235,20 +237,13 @@ impl SqliteConnectOptions {
         self
     }
 
-    /// Sets the log settings.
+    /// Sets the [threading mode](https://www.sqlite.org/threadsafe.html) for the database connection.
     ///
-    /// # Example
+    /// The default setting is `false` corersponding to using `OPEN_NOMUTEX`, if `true` then `OPEN_FULLMUTEX`.
     ///
-    /// ```rust
-    /// # use sqlx_core::sqlite::SqliteConnectOptions;
-    /// let options = SqliteConnectOptions::new()
-    ///     .log_settings(sqlx_core::connection::LogSettings {
-    ///     statements_level: sqlx_core::connection::LevelFilter::Info,
-    ///     ..Default::default()
-    /// });
-    /// ```
-    pub fn log_settings(mut self, log_settings: LogSettings) -> Self {
-        self.log_settings = log_settings;
+    /// See [open](https://www.sqlite.org/c3ref/open.html) for more details.
+    pub fn serialized(mut self, serialized: bool) -> Self {
+        self.serialized = serialized;
         self
     }
 }
