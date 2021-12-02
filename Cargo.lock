@@ -2347,6 +2347,7 @@ dependencies = [
  "sqlx-macros",
  "sqlx-rt",
  "sqlx-test",
+ "time 0.2.27",
  "time 0.3.2",
  "tokio",
  "trybuild",
