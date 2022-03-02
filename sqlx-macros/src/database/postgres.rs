@@ -19,6 +19,10 @@ impl_database_ext! {
 
         sqlx::postgres::types::PgMoney,
 
+        sqlx::postgres::types::PgLTree,
+
+        sqlx::postgres::types::PgLQuery,
+
         #[cfg(feature = "uuid")]
         sqlx::types::Uuid,
 
