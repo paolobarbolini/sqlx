@@ -2,14 +2,19 @@ use futures::{StreamExt, TryStreamExt};
 use sqlx::postgres::types::Oid;
 use sqlx::postgres::{
 <<<<<<< HEAD
+<<<<<<< HEAD
     PgConnectOptions, PgConnection, PgConnectionInfo, PgDatabaseError, PgErrorPosition,
     PgPoolOptions, PgRow, PgSeverity, Postgres,
 =======
     PgAdvisoryLock, PgConnectOptions, PgConnection, PgDatabaseError, PgErrorPosition, PgSeverity,
 >>>>>>> origin/master
+=======
+    PgAdvisoryLock, PgConnectOptions, PgConnection, PgDatabaseError, PgErrorPosition, PgListener,
+    PgSeverity,
+>>>>>>> master
 };
 use sqlx::{Column, Connection, Executor, Row, Statement, TypeInfo};
-use sqlx_test::{new, setup_if_needed};
+use sqlx_test::{new, pool, setup_if_needed};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
@@ -968,6 +973,23 @@ async fn test_listener_cleanup() -> anyhow::Result<()> {
         !try_recv(&mut listener).await?,
         "Notification is not received on fresh listener"
     );
+
+    Ok(())
+}
+
+#[sqlx_macros::test]
+async fn test_pg_listener_allows_pool_to_close() -> anyhow::Result<()> {
+    let pool = pool::<Postgres>().await?;
+
+    // acquires and holds a connection which would normally prevent the pool from closing
+    let mut listener = PgListener::connect_with(&pool).await?;
+
+    sqlx_rt::spawn(async move {
+        listener.recv().await;
+    });
+
+    // would previously hang forever since `PgListener` had no way to know the pool wanted to close
+    pool.close().await;
 
     Ok(())
 }
