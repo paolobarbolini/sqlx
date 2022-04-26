@@ -4,16 +4,15 @@ use crate::connection::Connection;
 use crate::database::Database;
 use crate::error::Error;
 use crate::pool::{deadline_as_timeout, PoolOptions};
-use crossbeam_queue::ArrayQueue;
 
-use futures_intrusive::sync::{Semaphore, SemaphoreReleaser};
+use crossbeam_queue::ArrayQueue;
+use sqlx_rt::{Semaphore, SemaphorePermit};
 
 use std::cmp;
 use std::mem;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
-
 use std::time::{Duration, Instant};
 
 /// Ihe number of permits to release to wake all waiters, such as on `SharedPool::close()`.
@@ -48,7 +47,7 @@ impl<DB: Database> SharedPool<DB> {
         let pool = Self {
             connect_options,
             idle_conns: ArrayQueue::new(capacity),
-            semaphore: Semaphore::new(options.fair, capacity),
+            semaphore: Semaphore::new(capacity),
             size: AtomicU32::new(0),
             is_closed: AtomicBool::new(false),
             on_closed: event_listener::Event::new(),
@@ -82,15 +81,9 @@ impl<DB: Database> SharedPool<DB> {
             // if we were the one to mark this closed, release enough permits to wake all waiters
             // we can't just do `usize::MAX` because that would overflow
             // and we can't do this more than once cause that would _also_ overflow
-            self.semaphore.release(WAKE_ALL_PERMITS);
+            self.semaphore.close();
             self.on_closed.notify(usize::MAX);
         }
-
-        // wait for all permits to be released
-        let _permits = self
-            .semaphore
-            .acquire(WAKE_ALL_PERMITS + (self.options.max_connections as usize))
-            .await;
 
         while let Some(idle) = self.idle_conns.pop() {
             let _ = idle.live.float((*self).clone()).close().await;
@@ -103,14 +96,14 @@ impl<DB: Database> SharedPool<DB> {
             return None;
         }
 
-        let permit = self.semaphore.try_acquire(1)?;
+        let permit = self.semaphore.try_acquire().ok()?;
         self.pop_idle(permit).ok()
     }
 
     fn pop_idle<'a>(
         self: &'a Arc<Self>,
-        permit: SemaphoreReleaser<'a>,
-    ) -> Result<Floating<DB, Idle<DB>>, SemaphoreReleaser<'a>> {
+        permit: SemaphorePermit<'a>,
+    ) -> Result<Floating<DB, Idle<DB>>, SemaphorePermit<'a>> {
         if let Some(idle) = self.idle_conns.pop() {
             Ok(Floating::from_idle(idle, (*self).clone(), permit))
         } else {
@@ -142,8 +135,8 @@ impl<DB: Database> SharedPool<DB> {
     /// Returns `None` if we are at max_connections or if the pool is closed.
     pub(super) fn try_increment_size<'a>(
         self: &'a Arc<Self>,
-        permit: SemaphoreReleaser<'a>,
-    ) -> Result<DecrementSizeGuard<DB>, SemaphoreReleaser<'a>> {
+        permit: SemaphorePermit<'a>,
+    ) -> Result<DecrementSizeGuard<DB>, SemaphorePermit<'a>> {
         match self
             .size
             .fetch_update(Ordering::AcqRel, Ordering::Acquire, |size| {
@@ -169,7 +162,7 @@ impl<DB: Database> SharedPool<DB> {
             self.options.connect_timeout,
             async {
                 loop {
-                    let permit = self.semaphore.acquire(1).await;
+                    let permit = self.semaphore.acquire().await.map_err(|_| Error::PoolClosed)?;
 
                     if self.is_closed() {
                         return Err(Error::PoolClosed);
@@ -377,9 +370,9 @@ impl<DB: Database> DecrementSizeGuard<DB> {
         }
     }
 
-    pub fn from_permit(pool: Arc<SharedPool<DB>>, mut permit: SemaphoreReleaser<'_>) -> Self {
+    pub fn from_permit(pool: Arc<SharedPool<DB>>, permit: SemaphorePermit<'_>) -> Self {
         // here we effectively take ownership of the permit
-        permit.disarm();
+        permit.forget();
         Self::new_permit(pool)
     }
 
@@ -390,7 +383,7 @@ impl<DB: Database> DecrementSizeGuard<DB> {
 
     /// Release the semaphore permit without decreasing the pool size.
     fn release_permit(self) {
-        self.pool.semaphore.release(1);
+        self.pool.semaphore.add_permits(1);
         self.cancel();
     }
 
@@ -406,6 +399,6 @@ impl<DB: Database> Drop for DecrementSizeGuard<DB> {
         self.pool.size.fetch_sub(1, Ordering::SeqCst);
 
         // and here we release the permit we got on construction
-        self.pool.semaphore.release(1);
+        self.pool.semaphore.add_permits(1);
     }
 }

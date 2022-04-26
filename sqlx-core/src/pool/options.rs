@@ -32,7 +32,6 @@ pub struct PoolOptions<DB: Database> {
     pub(crate) min_connections: u32,
     pub(crate) max_lifetime: Option<Duration>,
     pub(crate) idle_timeout: Option<Duration>,
-    pub(crate) fair: bool,
 }
 
 impl<DB: Database> Default for PoolOptions<DB> {
@@ -53,7 +52,6 @@ impl<DB: Database> PoolOptions<DB> {
             connect_timeout: Duration::from_secs(30),
             idle_timeout: Some(Duration::from_secs(10 * 60)),
             max_lifetime: Some(Duration::from_secs(30 * 60)),
-            fair: true,
         }
     }
 
@@ -120,24 +118,6 @@ impl<DB: Database> PoolOptions<DB> {
     /// Defaults to `true`.
     pub fn test_before_acquire(mut self, test: bool) -> Self {
         self.test_before_acquire = test;
-        self
-    }
-
-    /// If set to `true`, calls to `acquire()` are fair and connections  are issued
-    /// in first-come-first-serve order. If `false`, "drive-by" tasks may steal idle connections
-    /// ahead of tasks that have been waiting.
-    ///
-    /// According to `sqlx-bench/benches/pg_pool` this may slightly increase time
-    /// to `acquire()` at low pool contention but at very high contention it helps
-    /// avoid tasks at the head of the waiter queue getting repeatedly preempted by
-    /// these "drive-by" tasks and tasks further back in the queue timing out because
-    /// the queue isn't moving.
-    ///
-    /// Currently only exposed for benchmarking; `fair = true` seems to be the superior option
-    /// in most cases.
-    #[doc(hidden)]
-    pub fn __fair(mut self, fair: bool) -> Self {
-        self.fair = fair;
         self
     }
 
@@ -231,7 +211,11 @@ impl<DB: Database> PoolOptions<DB> {
 async fn init_min_connections<DB: Database>(pool: &Arc<SharedPool<DB>>) -> Result<(), Error> {
     for _ in 0..cmp::max(pool.options.min_connections, 1) {
         let deadline = Instant::now() + pool.options.connect_timeout;
-        let permit = pool.semaphore.acquire(1).await;
+        let permit = pool
+            .semaphore
+            .acquire()
+            .await
+            .map_err(|_| Error::PoolClosed)?;
 
         // this guard will prevent us from exceeding `max_size`
         if let Ok(guard) = pool.try_increment_size(permit) {

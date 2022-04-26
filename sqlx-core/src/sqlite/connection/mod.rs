@@ -3,9 +3,9 @@ use std::fmt::{self, Debug, Formatter};
 use std::ptr::NonNull;
 
 use futures_core::future::BoxFuture;
-use futures_intrusive::sync::MutexGuard;
 use futures_util::future;
 use libsqlite3_sys::sqlite3;
+use sqlx_rt::MutexGuard;
 
 pub(crate) use handle::{ConnectionHandle, ConnectionHandleRaw};
 

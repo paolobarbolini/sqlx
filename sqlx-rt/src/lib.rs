@@ -36,8 +36,13 @@ pub use native_tls;
     not(feature = "_rt-async-std"),
 ))]
 pub use tokio::{
-    self, fs, io::AsyncRead, io::AsyncReadExt, io::AsyncWrite, io::AsyncWriteExt, io::ReadBuf,
-    net::TcpStream, runtime::Handle, task::spawn, task::yield_now, time::sleep, time::timeout,
+    self, fs,
+    io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf},
+    net::TcpStream,
+    runtime::Handle,
+    sync::{Mutex, MutexGuard, Semaphore, SemaphorePermit},
+    task::{spawn, yield_now},
+    time::{sleep, timeout},
 };
 
 #[cfg(all(
@@ -140,9 +145,15 @@ macro_rules! blocking {
     not(any(feature = "_rt-actix", feature = "_rt-tokio")),
 ))]
 pub use async_std::{
-    self, fs, future::timeout, io::prelude::ReadExt as AsyncReadExt,
-    io::prelude::WriteExt as AsyncWriteExt, io::Read as AsyncRead, io::Write as AsyncWrite,
-    net::TcpStream, task::sleep, task::spawn, task::yield_now,
+    self, fs,
+    future::timeout,
+    io::{
+        prelude::{ReadExt as AsyncReadExt, WriteExt as AsyncWriteExt},
+        Read as AsyncRead, Write as AsyncWrite,
+    },
+    net::TcpStream,
+    sync::{Mutex, MutexGuard},
+    task::{sleep, spawn, yield_now},
 };
 
 #[cfg(all(

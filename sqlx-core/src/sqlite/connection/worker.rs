@@ -6,7 +6,7 @@ use std::thread;
 
 use either::Either;
 use futures_channel::oneshot;
-use futures_intrusive::sync::{Mutex, MutexGuard};
+use sqlx_rt::{Mutex, MutexGuard};
 
 use crate::describe::Describe;
 use crate::error::Error;
@@ -101,7 +101,7 @@ impl ConnectionWorker {
                     // note: must be fair because in `Command::UnlockDb` we unlock the mutex
                     // and then immediately try to relock it; an unfair mutex would immediately
                     // grant us the lock even if another task is waiting.
-                    conn: Mutex::new(conn, true),
+                    conn: Mutex::new(conn),
                 });
                 let mut conn = shared.conn.try_lock().unwrap();
 

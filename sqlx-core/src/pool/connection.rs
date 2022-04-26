@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use std::time::Instant;
 
-use futures_intrusive::sync::SemaphoreReleaser;
+use sqlx_rt::SemaphorePermit;
 
 use crate::connection::Connection;
 use crate::database::Database;
@@ -239,7 +239,7 @@ impl<DB: Database> Floating<DB, Idle<DB>> {
     pub fn from_idle(
         idle: Idle<DB>,
         pool: Arc<SharedPool<DB>>,
-        permit: SemaphoreReleaser<'_>,
+        permit: SemaphorePermit<'_>,
     ) -> Self {
         Self {
             inner: idle,
