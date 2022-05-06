@@ -2343,7 +2343,6 @@ dependencies = [
  "encoding_rs",
  "event-listener",
  "flume",
- "futures-channel",
  "futures-core",
  "futures-executor",
  "futures-util",

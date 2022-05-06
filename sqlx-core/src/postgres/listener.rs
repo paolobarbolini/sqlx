@@ -3,9 +3,9 @@ use std::io;
 use std::str::from_utf8;
 
 use either::Either;
-use futures_channel::mpsc;
 use futures_core::future::BoxFuture;
 use futures_core::stream::{BoxStream, Stream};
+use tokio::sync::mpsc;
 
 use crate::describe::Describe;
 use crate::error::Error;
@@ -56,7 +56,7 @@ impl PgListener {
         let mut connection = pool.acquire().await?;
 
         // Setup a notification buffer
-        let (sender, receiver) = mpsc::unbounded();
+        let (sender, receiver) = mpsc::unbounded_channel();
         connection.stream.notifications = Some(sender);
 
         Ok(Self {
@@ -229,7 +229,7 @@ impl PgListener {
     pub async fn try_recv(&mut self) -> Result<Option<PgNotification>, Error> {
         // Flush the buffer first, if anything
         // This would only fill up if this listener is used as a connection
-        if let Ok(Some(notification)) = self.buffer_rx.try_next() {
+        if let Ok(notification) = self.buffer_rx.try_recv() {
             return Ok(Some(PgNotification(notification)));
         }
 

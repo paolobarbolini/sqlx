@@ -3,9 +3,8 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use bytes::{Buf, Bytes};
-use futures_channel::mpsc::UnboundedSender;
-use futures_util::SinkExt;
 use log::Level;
+use tokio::sync::mpsc::UnboundedSender;
 
 use crate::error::Error;
 use crate::io::{BufStream, Decode, Encode};
@@ -106,7 +105,7 @@ impl PgStream {
                 MessageFormat::NotificationResponse => {
                     if let Some(buffer) = &mut self.notifications {
                         let notification: Notification = message.decode()?;
-                        let _ = buffer.send(notification).await;
+                        let _ = buffer.send(notification);
 
                         continue;
                     }

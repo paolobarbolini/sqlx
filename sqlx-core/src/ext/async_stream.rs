@@ -2,10 +2,10 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use futures_channel::mpsc;
 use futures_core::future::BoxFuture;
 use futures_core::stream::Stream;
-use futures_util::{pin_mut, FutureExt, SinkExt};
+use futures_util::{pin_mut, FutureExt};
+use tokio::sync::mpsc;
 
 use crate::error::Error;
 
@@ -21,7 +21,7 @@ impl<'a, T> TryAsyncStream<'a, T> {
         Fut: 'a + Future<Output = Result<(), Error>> + Send,
         T: 'a + Send,
     {
-        let (mut sender, receiver) = mpsc::channel(0);
+        let (sender, receiver) = mpsc::channel(0);
 
         let future = f(sender.clone());
         let future = async move {
@@ -54,16 +54,16 @@ impl<'a, T> Stream for TryAsyncStream<'a, T> {
         pin_mut!(receiver);
 
         // then we check to see if we have anything to return
-        receiver.poll_next(cx)
+        receiver.poll_recv(cx)
     }
 }
 
 macro_rules! try_stream {
     ($($block:tt)*) => {
-        crate::ext::async_stream::TryAsyncStream::new(move |mut sender| async move {
+        crate::ext::async_stream::TryAsyncStream::new(move |sender| async move {
             macro_rules! r#yield {
                 ($v:expr) => {{
-                    let _ = futures_util::sink::SinkExt::send(&mut sender, Ok($v)).await;
+                    let _ = sender.send(Ok($v)).await;
                 }}
             }
 
